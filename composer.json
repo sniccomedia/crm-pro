@@ -1,0 +1,21 @@
+{
+  "name": "sniccomedia/crm-pro",
+  "minimum-stability": "stable",
+  "license": "GPL-2.0-or-later",
+  "type": "wordpress-plugin",
+  "authors": [
+    {
+      "name": "WPManageNinja",
+      "homepage": "https://fluentcrm.com",
+      "role": "Original Developers"
+    },
+    {
+      "name": "Snicco Media",
+      "homepage": "https://snicco.de",
+      "role": "Forked and extenteded by Snicco Media."
+    }
+  ],
+  "require": {
+    "composer/installers": "^v1.0.0"
+  }
+}
