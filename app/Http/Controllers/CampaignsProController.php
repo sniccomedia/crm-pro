@@ -57,28 +57,72 @@ class CampaignsProController extends Controller
                 'message' => __('Sorry! No emails found', 'fluentcampaign-pro')
             ]);
         }
-
+    
+        $mail_failure = 0;
+        add_action('wp_mail_failed', function () use (&$mail_failure) {
+        
+            $mail_failure++;
+        
+        }, 10, 1);
+        
+        $total_count = count($emails);
+        $resend = 0;
+        $skipped = 0;
+        
         foreach ($emails as $email) {
-            if (!$email->subscriber) {
+            
+            if (!$email->subscriber || $email->subscriber->status !== 'subscribed') {
+                $skipped++;
                 continue;
             }
             if (!$email->email_body) {
                 $email->email_body = $campaign->email_body;
             }
             if (!$email->email_body) {
+                $skipped++;
                 continue;
             }
+            
             $email->status = 'scheduled';
             $email->is_parsed = 0;
             $email->note = 'Manually resent';
             $email->scheduled_at = current_time('mysql');
             $email->save();
+            $resend++;
             do_action('fluentcrm_process_contact_jobs', $email->subscriber);
         }
 
+        if ($total_count === 1 ) {
+            
+            if ( $skipped === 1 ){
+                
+                return $this->sendError([
+                    'message' => __('The contact needs to be subscribed to resend emails.', 'fluentcampaign-pro')
+                ]);
+            }
+    
+            return [
+                'message' => __('Email has been resent', 'fluentcampaign-pro')
+            ];
+            
+        }
+      
+        if ( $resend === 0 ) {
+            
+            return $this->sendError([
+                'message' => __('No emails could be resend.', 'fluentcampaign-pro')
+            ]);
+            
+        }
+        
         return [
-            'message' => __('Email has been resent', 'fluentcampaign-pro')
+            'message' => sprintf(
+                __( '%s out of %s Emails have been resend. %s Skipped.', 'fluentcampaign-pro' ),
+                $resend, $total_count, $skipped
+            )
         ];
+        
+        
     }
 
     public function doTagActions(Request $request, $campaignId)
